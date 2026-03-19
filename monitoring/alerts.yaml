@@ -1,0 +1,47 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: wildfire-tracker-alerts
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+    - name: wildfire-tracker
+      rules:
+        - alert: WildfireTrackerDown
+          expr: up{job="wildfire-tracker"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Wildfire Tracker is down"
+            description: "The wildfire-tracker pod has been unreachable for more than 1 minute."
+
+        - alert: WildfireTrackerHighCPU
+          expr: rate(container_cpu_usage_seconds_total{pod=~"wildfire-tracker.*"}[5m]) > 0.8
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage on wildfire-tracker"
+            description: "CPU usage has exceeded 80% for more than 5 minutes."
+
+        - alert: WildfireTrackerHighMemory
+          expr: container_memory_usage_bytes{pod=~"wildfire-tracker.*"} > 200000000
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage on wildfire-tracker"
+            description: "Memory usage has exceeded 200MB for more than 5 minutes."
+
+        - alert: WildfireTrackerPodRestarting
+          expr: rate(kube_pod_container_status_restarts_total{pod=~"wildfire-tracker.*"}[15m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Wildfire Tracker pod keeps restarting"
+            description: "Pod {{ $labels.pod }} has restarted more than once in the last 15 minutes."
