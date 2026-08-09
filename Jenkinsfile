@@ -16,7 +16,7 @@ pipeline {
         stage("Checkout") {
             steps {
                 git(
-                    url: "https://github.com/GirishDevnath-Torch/wildfire-tracker.git",
+                    url: "https://github.com/Manish-Shivade/Wildfire-tracker.git",
                     branch: "main",
                     credentialsId: "github-credentials"
                 )
