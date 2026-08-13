@@ -5,6 +5,8 @@ A real-time wildfire monitoring application built with React and the NASA EONET 
 ---
 
 ## Screenshots
+<img width="2495" height="959" alt="image" src="https://github.com/user-attachments/assets/034e1b1d-5477-4be6-9a30-5d98003be150" />
+
 
 > Add screenshots of the running app here, e.g.:
 > `docs/screenshot-map.png` — map view with clustered fire markers
