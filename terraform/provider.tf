@@ -8,11 +8,15 @@ terraform {
     }
   }
 
-  # Uncomment after creating the S3 bucket for remote state
+  # Remote state backend. Requires the bucket + DynamoDB lock table
+  # created by terraform/bootstrap (see terraform/bootstrap/main.tf).
+  # Uncomment, then run: terraform init -migrate-state
   # backend "s3" {
-  #   bucket = "wildfire-tracker-tfstate"
-  #   key    = "wildfire-tracker/terraform.tfstate"
-  #   region = "us-east-1"
+  #   bucket         = "wildfire-tracker-tfstate"
+  #   key            = "wildfire-tracker/terraform.tfstate"
+  #   region         = "us-east-1"
+  #   dynamodb_table = "wildfire-tracker-tfstate-lock"
+  #   encrypt        = true
   # }
 }
 
