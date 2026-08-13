@@ -4,19 +4,24 @@ A real-time wildfire monitoring application built with React and the NASA EONET 
 
 ---
 
+## Screenshots
+
+> Add screenshots of the running app here, e.g.:
+> `docs/screenshot-map.png` — map view with clustered fire markers
+> `docs/screenshot-sidebar.png` — sidebar with search/filter and event list
+>
+> ```markdown
+> ![Map view](docs/screenshot-map.png)
+> ![Sidebar filter](docs/screenshot-sidebar.png)
+> ```
+>
+> Run `npm run dev`, open `http://localhost:3000`, and capture a couple of views once there's live event data on the map.
+
+---
+
 ## Architecture Overview
 
-```
-NASA EONET API → React (Vite) → Docker → ECR → EKS → Helm
-                                   ↑
-                              Jenkins CI/CD
-                                   ↑
-                         SonarQube + Trivy Scan
-                                   ↑
-                        Terraform (VPC + EKS + ECR)
-                                   ↑
-                     Prometheus + Grafana Monitoring
-```
+![Architecture diagram](docs/architecture.svg)
 
 ---
 
@@ -48,7 +53,10 @@ wildfire-tracker/
 │   ├── vpc.tf                   # VPC, subnets, NAT gateways
 │   ├── eks.tf                   # EKS cluster + managed node group
 │   ├── ecr.tf                   # ECR repository
-│   └── outputs.tf
+│   ├── outputs.tf
+│   └── bootstrap/                # One-time S3 state bucket + DynamoDB lock table
+├── docs/
+│   └── architecture.svg         # Architecture diagram
 ├── monitoring/
 │   ├── prometheus-values.yaml   # kube-prometheus-stack values
 │   └── alerts.yaml              # PrometheusRule alert definitions
@@ -61,7 +69,7 @@ wildfire-tracker/
 
 | Tool | Version |
 |------|---------|
-| Node.js | 20+ |
+| Node.js | 22+ |
 | Docker | 24+ |
 | Terraform | 1.5+ |
 | AWS CLI | 2+ |
@@ -94,8 +102,8 @@ npm run build
 # Build image
 docker build -t wildfire-tracker:latest .
 
-# Run locally
-docker run -p 8080:80 wildfire-tracker:latest
+# Run locally (container now listens on 8080, non-root)
+docker run -p 8080:8080 wildfire-tracker:latest
 
 # Open http://localhost:8080
 ```
@@ -129,6 +137,26 @@ $(terraform output -raw configure_kubectl)
 - EKS cluster (Kubernetes 1.29)
 - Managed Node Group (`t3.medium`, 2–4 nodes)
 - ECR repository with lifecycle policy (keep last 10 images)
+
+### Remote State (S3 + DynamoDB)
+
+State is local by default. To use a shared S3 backend with locking:
+
+```bash
+# 1. One-time bootstrap: create the state bucket + lock table
+cd terraform/bootstrap
+terraform init
+terraform apply
+
+# 2. Uncomment the backend "s3" block in terraform/provider.tf,
+#    then migrate existing local state into it
+cd ../
+terraform init -migrate-state
+```
+
+The bootstrap config lives in its own state (chicken-and-egg: a backend
+can't create the bucket it needs before it exists), so it's applied
+separately and only needs to be run once per AWS account.
 
 ---
 
