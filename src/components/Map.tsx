@@ -1,8 +1,11 @@
 import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import type { WildfireEvent } from '../types';
 import 'leaflet/dist/leaflet.css';
+import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
+import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css';
 
 // Fix default marker icons for Vite/webpack builds
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,25 +64,27 @@ export default function Map({ events, selectedId, onSelect }: MapProps) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <FlyTo events={events} selectedId={selectedId} />
-      {events.map((event) => {
-        const g = event.geometry[event.geometry.length - 1];
-        if (!g || g.type !== 'Point') return null;
-        const [lng, lat] = g.coordinates as number[];
-        return (
-          <Marker
-            key={event.id}
-            position={[lat, lng]}
-            icon={fireIcon}
-            eventHandlers={{ click: () => onSelect(event.id) }}
-          >
-            <Popup>
-              <strong>{event.title}</strong>
-              <br />
-              <span className="text-xs">{new Date(g.date).toLocaleDateString()}</span>
-            </Popup>
-          </Marker>
-        );
-      })}
+      <MarkerClusterGroup chunkedLoading maxClusterRadius={50} spiderfyOnMaxZoom>
+        {events.map((event) => {
+          const g = event.geometry[event.geometry.length - 1];
+          if (!g || g.type !== 'Point') return null;
+          const [lng, lat] = g.coordinates as number[];
+          return (
+            <Marker
+              key={event.id}
+              position={[lat, lng]}
+              icon={fireIcon}
+              eventHandlers={{ click: () => onSelect(event.id) }}
+            >
+              <Popup>
+                <strong>{event.title}</strong>
+                <br />
+                <span className="text-xs">{new Date(g.date).toLocaleDateString()}</span>
+              </Popup>
+            </Marker>
+          );
+        })}
+      </MarkerClusterGroup>
     </MapContainer>
   );
 }
